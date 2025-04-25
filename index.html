@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historian Bot</title>
+  <!-- Add Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background: url('worldmap1.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 1400px;
+      height: 80vh;
+    }
+
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+    }
+
+    .map-section {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      min-width: 300px;
+    }
+
+    .gallery-section {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+    }
+
+    .gallery-header {
+      padding: 15px;
+      background: #8B4513;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .gallery-content {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      align-content: start;
+    }
+
+    .gallery-item {
+      aspect-ratio: 1;
+      border: 2px solid #8B4513;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s;
+      background: #f5f5dc;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-source {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(139, 69, 19, 0.8);
+      color: white;
+      padding: 4px 8px;
+      font-size: 0.8em;
+      text-align: center;
+    }
+
+    .gallery-placeholder {
+      text-align: center;
+      color: #8B4513;
+      font-style: italic;
+      padding: 20px;
+      grid-column: 1 / -1;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .chatbox {
+      width: 100%;
+      background: #cb9338e6;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      height: 65vh;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 14px 18px;
+      border-radius: 20px;
+      max-width: 70%;
+      word-wrap: break-word;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      background: linear-gradient(135deg, #8B0000, #A52A2A);
+      color: white;
+      display: block;
+    }
+
+    .message.bot {
+      margin-right: auto;
+      border-bottom-left-radius: 5px;
+      text-align: left;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: linear-gradient(135deg, #cb4304, #CD853F);
+      color: white;
+      border-bottom-right-radius: 5px;
+      text-align: right;
+    }
+
+    .message span.label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: inherit;
+    }
+
+    .input-container {
+      display: flex;
+      width: 100%;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px 0 0 8px;
+      border: 1px solid #f19306;
+      font-family: 'Georgia', serif;
+      font-size: 16px;
+      background-color:linear-gradient(135deg, #B22222, #ef662b);
+    }
+
+    button {
+      padding: 12px 20px;
+      border-radius: 0 8px 8px 0;
+      background: #f7a603;
+      color: #8B0000;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #FFD700;
+    }
+
+    .map-controls {
+      position: absolute;
+      top: 10px;
+      right: 30px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .map-controls button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #f7a603;
+      color: #8B0000;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-section">
+      <div class="chatbox" id="chatbox">
+        <div class="message bot">
+          <span class="label">Folk Historian:</span>
+          "The past is full of wonders—shall we explore it together? You can either type a pincode or select a location on the map to learn about its history."
+        </div>
+      </div>
+      <div class="input-container">
+        <input type="text" id="userInput" placeholder="Ask a Historical question or enter a pincode..." />
+        <button onclick="sendMessage()">Ask</button>
+      </div>
+    </div>
+    <div class="map-section">
+      <div id="map"></div>
+      <div class="map-controls">
+        <button onclick="clearMapSelection()">Clear Selection</button>
+      </div>
+    </div>
+    <div class="gallery-section">
+      <div class="gallery-header">Historical Images</div>
+      <div class="gallery-content" id="galleryContainer">
+        <div class="gallery-placeholder">Select a location on the map to view historical images</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="chat.js"></script>
+</body>
+</html>
